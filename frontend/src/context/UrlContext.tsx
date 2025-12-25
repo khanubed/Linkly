@@ -38,7 +38,7 @@ export interface UrlAnalytics {
 export const UrlContext = createContext<any>(null)
 
 export const UrlProvider = ( {children} : PropsWithChildren ) => {
-    const [showPricingModal, setShowPricingModal] = useState(true); 
+    const [showPricingModal, setShowPricingModal] = useState(false); 
     const { navigate : onNavigate} = useContext(NavContext)
     const {userData , setUserData , isAdmin , } = useContext(AuthContext)
     const [urls, setUrls] = useState<UrlData[]>([]);
