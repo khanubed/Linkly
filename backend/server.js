@@ -31,8 +31,10 @@ app.use("/api/admin", adminRouter);
 
 await connectDB()
 
-const PORT = process.env.PORT || 8000;
-server.listen(PORT, ()=>console.log("Created server on " , PORT));
+if (process.env.NODE_ENV !== "production") {
+   const PORT = process.env.PORT || 8000;
+   server.listen(PORT, ()=> console.log("Server is Running on port :" + PORT));
+}
 
 export default server;
 
