@@ -1,13 +1,14 @@
 import { createContext , useState, useContext , PropsWithChildren , useEffect} from "react";
 import axios from 'axios'
 import toast from 'react-hot-toast'
+import { NavContext } from "./NavigationContext";
 
 
 const backendURL = import.meta.env.VITE_BACKEND_URL
 axios.defaults.baseURL = backendURL
 
 type SubscriptionPlan = 'free' | 'pro' | 'business';
-type Page = 'landing' | 'signup' | 'login' | 'dashboard' | 'admin';
+// type Page = 'landing' | 'signup' | 'login' | 'dashboard' | 'admin';
 
 export interface User {
   _id: string;
@@ -29,11 +30,12 @@ export interface User {
 export const AuthContext = createContext<any>(null);
 
 export const AuthProvider = ({children} : PropsWithChildren) => {
-          const [currentPage, setCurrentPage] = useState<Page>('landing');
           const [isAuthenticated, setIsAuthenticated] = useState(false);
           const [isAdmin, setIsAdmin] = useState(false);
           const [userData, setUserData] = useState<User | null>(null);
           const [token, setToken] = useState(localStorage.getItem("token"));
+
+          const { navigate , currentPage , setCurrentPage } = useContext(NavContext);
 
 const authCheck = async () => {
   try {
@@ -67,9 +69,7 @@ const authCheck = async () => {
   }
 };  
 
-  const navigate = (page: Page) => {
-    setCurrentPage(page);
-  };
+
 
   const handleLogin = async (email: string, password: string) => {
     try {

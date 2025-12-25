@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -17,11 +17,13 @@ import {
   Lock,
   Sparkles
 } from 'lucide-react';
+import { PaymentContext } from '../context/PaymentContext';
+import toast from 'react-hot-toast';
+import { AuthContext } from '../context/AuthContext';
 
 interface PricingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpgrade: (plan: 'pro' | 'business') => void;
   currentLinksUsed: number;
 }
 
@@ -37,21 +39,26 @@ interface PlanFeatures {
   linksLimit: string;
 }
 
-export function PricingModal({ isOpen, onClose, onUpgrade, currentLinksUsed }: PricingModalProps) {
+
+
+export function PricingModal({ isOpen, onClose, currentLinksUsed }: PricingModalProps) {
   const [selectedPlan, setSelectedPlan] = useState<'pro' | 'business'>('pro');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
-  const [paymentData, setPaymentData] = useState({
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-    nameOnCard: ''
-  });
+  // const [showPaymentForm, setShowPaymentForm] = useState(false);
+
+  const { userData  , setUserData} = useContext<any>(AuthContext);
+
+  const onUpgrade = (plan: "pro" | "business") => {
+    setUserData((prev : any)   =>
+     prev ? { ...prev, subscriptionPlan: plan } : prev
+    );
+  };
+
 
   const plans: Record<'pro' | 'business', PlanFeatures> = {
     pro: {
       name: 'Pro',
-      price: '$9',
+      price: '₹9',
       period: '/month',
       description: 'Perfect for professionals and small businesses',
       linksLimit: '1,000 links/month',
@@ -71,7 +78,7 @@ export function PricingModal({ isOpen, onClose, onUpgrade, currentLinksUsed }: P
     },
     business: {
       name: 'Business',
-      price: '$29',
+      price: '₹29',
       period: '/month',
       description: 'For teams and growing businesses',
       linksLimit: 'Unlimited links',
@@ -92,21 +99,61 @@ export function PricingModal({ isOpen, onClose, onUpgrade, currentLinksUsed }: P
     }
   };
 
-  const handleUpgrade = async () => {
-    setIsProcessing(true);
-    
-    // Simulate payment processing
-    setTimeout(() => {
-      onUpgrade(selectedPlan);
-      setIsProcessing(false);
-      onClose();
-    }, 2000);
-  };
+  const {  createOrder , verifyPayment , loadRazorpay  } = useContext(PaymentContext)
 
-  const handlePaymentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleUpgrade();
-  };
+  const handleUpgrade = async () => {
+  setIsProcessing(true);
+
+  const loaded = await loadRazorpay();
+  if (!loaded) {
+    toast.error("Razorpay SDK failed");
+    setIsProcessing(false);
+    return;
+  }
+
+  try {
+    const order = await createOrder(selectedPlan);
+
+    const options = {
+      key: order.key,
+      amount: order.amount,
+      currency: "INR",
+      order_id: order.orderId,
+      name: "Lnk.ly",
+      description: `${selectedPlan} Plan Upgrade`,
+
+      handler: async (response: any) => {
+        try {
+          const verifyRes = await verifyPayment({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            userId: userData._id, // ✅ THIS FIXES EVERYTHING
+          });
+
+          toast.success(`Upgraded to ${verifyRes.plan} 🎉`);
+          onUpgrade(verifyRes.plan);
+          onClose();
+        } catch {
+          toast.error("Payment verification failed");
+        }
+      },
+
+      theme: { color: "#0ea5e9" },
+    };
+
+    const razorpay = new (window as any).Razorpay(options);
+    razorpay.open();
+  } catch {
+    toast.error("Payment failed");
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
+
+
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -121,7 +168,7 @@ export function PricingModal({ isOpen, onClose, onUpgrade, currentLinksUsed }: P
           </DialogDescription>
         </DialogHeader>
 
-        {!showPaymentForm ? (
+        {/* {!showPaymentForm ? ( */}
           <div className="space-y-6">
             {/* Current Usage Alert */}
             <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-center">
@@ -192,9 +239,10 @@ export function PricingModal({ isOpen, onClose, onUpgrade, currentLinksUsed }: P
               <Button 
                 size="lg" 
                 className="w-full h-12 text-lg"
-                onClick={() => setShowPaymentForm(true)}
+                onClick={() => handleUpgrade()}
+                disabled={isProcessing}
               >
-                Continue with {plans[selectedPlan].name} Plan
+                 {isProcessing ? "Processing..." : `Upgrade to ${plans[selectedPlan].name}`}
               </Button>
               
               <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
@@ -213,123 +261,6 @@ export function PricingModal({ isOpen, onClose, onUpgrade, currentLinksUsed }: P
               </div>
             </div>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Selected Plan Summary */}
-            <Card className="border-primary/20 bg-primary/5">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold">{plans[selectedPlan].name} Plan</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {plans[selectedPlan].description}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold">
-                      {plans[selectedPlan].price}
-                      <span className="text-sm text-muted-foreground">
-                        {plans[selectedPlan].period}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Payment Form */}
-            <form onSubmit={handlePaymentSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <Label htmlFor="nameOnCard">Name on Card</Label>
-                  <Input
-                    id="nameOnCard"
-                    placeholder="John Doe"
-                    value={paymentData.nameOnCard}
-                    onChange={(e) => setPaymentData({...paymentData, nameOnCard: e.target.value})}
-                    required
-                    className="h-12"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="cardNumber">Card Number</Label>
-                  <Input
-                    id="cardNumber"
-                    placeholder="1234 5678 9012 3456"
-                    value={paymentData.cardNumber}
-                    onChange={(e) => setPaymentData({...paymentData, cardNumber: e.target.value})}
-                    required
-                    className="h-12"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="expiryDate">Expiry Date</Label>
-                    <Input
-                      id="expiryDate"
-                      placeholder="MM/YY"
-                      value={paymentData.expiryDate}
-                      onChange={(e) => setPaymentData({...paymentData, expiryDate: e.target.value})}
-                      required
-                      className="h-12"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="cvv">CVV</Label>
-                    <Input
-                      id="cvv"
-                      placeholder="123"
-                      value={paymentData.cvv}
-                      onChange={(e) => setPaymentData({...paymentData, cvv: e.target.value})}
-                      required
-                      className="h-12"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="flex gap-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setShowPaymentForm(false)}
-                  className="flex-1"
-                >
-                  Back to Plans
-                </Button>
-                <Button 
-                  type="submit" 
-                  className="flex-1 h-12"
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                      Processing...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="h-4 w-4" />
-                      Complete Payment
-                    </div>
-                  )}
-                </Button>
-              </div>
-            </form>
-
-            {/* Security Notice */}
-            <div className="text-center text-sm text-muted-foreground">
-              <p className="flex items-center justify-center gap-2">
-                <Lock className="h-4 w-4" />
-                Your payment information is secure and encrypted
-              </p>
-            </div>
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   );

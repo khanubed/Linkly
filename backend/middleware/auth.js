@@ -41,14 +41,16 @@ export const secureRoute = async (req, res, next) => {
 export const verifyAdmin = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
+    // console.log(token);
     if (!token) return res.status(401).json({ message: "No token provided" });
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
-
-    if (!user || user.isAdmin)
+    const decoded = jwt.verify(token, process.env.JWT_TOKEN);
+    // console.log(decoded)
+    const user = await User.findById(decoded.userId);
+    // console.log(user)
+    if (!user || !user.isAdmin)
       return res.status(403).json({ message: "Not authorized" });
-
+  
     req.user = user;
     next();
   } catch (err) {

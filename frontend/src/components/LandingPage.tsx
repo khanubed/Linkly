@@ -5,12 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Badge } from './ui/badge';
 import { Link, BarChart3, QrCode, Shield, Zap, Globe, Star, CheckCircle, ArrowRight, Users, Timer, TrendingUp } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
+import { NavContext } from '../context/NavigationContext';
 
-interface LandingPageProps {
-  onNavigate: (page: 'landing' | 'signup' | 'login' | 'dashboard' | 'admin') => void;
-}
+// interface LandingPageProps {
+//   onNavigate: (page: 'landing' | 'signup' | 'login' | 'dashboard' | 'admin') => void;
+// }
 
-export function LandingPage({ onNavigate }: LandingPageProps) {
+export function LandingPage() {
   const [urlInput, setUrlInput] = useState('');
   const [isVisible, setIsVisible] = useState(false);
   const [stats, setStats] = useState({
@@ -19,7 +20,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
     activeUsers: 0
   });
 
-  const { navigate } = useContext(AuthContext);
+  const { navigate : onNavigate} = useContext(NavContext);
 
 
   useEffect(() => {
@@ -198,7 +199,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                 />
                 <Button 
                   size="lg" 
-                  onClick={()=> navigate('signup')}
+                  onClick={()=> onNavigate('signup')}
                   className="h-16 px-10 text-lg bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-300 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 group"
                 >
                   <span className="group-hover:scale-110 transition-transform">Shorten URL</span>

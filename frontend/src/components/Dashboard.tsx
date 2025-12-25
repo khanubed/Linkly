@@ -35,25 +35,20 @@ import { UrlData } from '../context/UrlContext';
 import { AuthContext } from '../context/AuthContext';
 import { UrlContext  } from '../context/UrlContext';
 import { AnalyticsContext } from '../context/AnalyticsContext';
+import { NavContext } from '../context/NavigationContext';
 
-interface DashboardProps {
-  // onNavigate: (page: 'landing' | 'signup' | 'login' | 'dashboard' | 'admin') => void;
-  // onLogout: () => void;
-  // isAdmin: boolean;
-  // userData: UserData;
-  onUpgrade: (plan: 'pro' | 'business') => void;
-  // onLinkCreated: () => void;
-}
+
 
 const backendURL = import.meta.env.VITE_BACKEND_URL
 axios.defaults.baseURL = backendURL
 
 
 
-export function Dashboard({ onUpgrade }: DashboardProps) {
+export function Dashboard() {
   const [urlInput, setUrlInput] = useState('');
   const [customAlias, setCustomAlias] = useState('');
-  const { handleLogout : onLogout , userData , setUserData , isAdmin , navigate : onNavigate } = useContext(AuthContext)
+  const { handleLogout : onLogout , userData , setUserData , isAdmin  } = useContext(AuthContext)
+  const { navigate : onNavigate } = useContext<any>(NavContext);
   const { topCountry , monthlyClicks  } = useContext<any>(AnalyticsContext)
   const { handleLinkCreated , urls , setUrls , setShowPricingModal , showPricingModal , handleDeleteUrl , fetchUrls , getLinksLimit , getLinksRemaining  } = useContext(UrlContext)
 
@@ -62,16 +57,6 @@ export function Dashboard({ onUpgrade }: DashboardProps) {
     fetchUrls()
   }, [])
   
-
-  const chartData = [
-    { name: 'Mon', clicks: 400 },
-    { name: 'Tue', clicks: 300 },
-    { name: 'Wed', clicks: 600 },
-    { name: 'Thu', clicks: 800 },
-    { name: 'Fri', clicks: 700 },
-    { name: 'Sat', clicks: 900 },
-    { name: 'Sun', clicks: 650 }
-  ];
 
 const handleShortenUrl = async () => {
   if (!urlInput.trim() || !userData) return;
@@ -421,7 +406,7 @@ const handleShortenUrl = async () => {
       <PricingModal
         isOpen={showPricingModal}
         onClose={() => setShowPricingModal(false)}
-        onUpgrade={onUpgrade}
+        // onUpgrade={onUpgrade}
         currentLinksUsed={userData.linksCreated}
       />
     </div>

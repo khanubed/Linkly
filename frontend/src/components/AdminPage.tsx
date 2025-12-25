@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { use, useContext, useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -27,84 +27,100 @@ import {
   Clock,
   Filter
 } from 'lucide-react';
+import { AdminContext } from '../context/AdminContext';
+import { AuthContext } from '../context/AuthContext';
+import { NavContext } from '../context/NavigationContext';
+// import { set } from 'mongoose';
+// import { toggleUserStatus } from '../../../backend/controllers/admin';
 
-interface AdminPageProps {
-  onNavigate: (page: 'landing' | 'signup' | 'login' | 'dashboard' | 'admin') => void;
-  onLogout: () => void;
-}
 
-interface UserData {
-  id: string;
-  name: string;
+
+export interface UserData {
+  _id: string;
+  fullName: string;
   email: string;
-  urlsCreated: number;
+
+  subscriptionPlan: "free" | "pro" | "business";
+  subscriptionStatus: "active" | "inactive" | "cancelled";
+
+  linksCreated: number;
   totalClicks: number;
-  joinDate: string;
-  status: 'active' | 'suspended';
+
+  isAdmin: boolean;
+  status: "active" | "suspended";
+
+  createdAt: string; // ISO string from backend
+  updatedAt: string;
+
+  __v?: number;
 }
 
-export function AdminPage({ onNavigate, onLogout }: AdminPageProps) {
-  const [users, setUsers] = useState<UserData[]>([
-    {
-      id: '1',
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      urlsCreated: 23,
-      totalClicks: 1247,
-      joinDate: '2024-01-15',
-      status: 'active'
-    },
-    {
-      id: '2',
-      name: 'Jane Smith',
-      email: 'jane.smith@example.com',
-      urlsCreated: 45,
-      totalClicks: 2890,
-      joinDate: '2024-01-10',
-      status: 'active'
-    },
-    {
-      id: '3',
-      name: 'Mike Johnson',
-      email: 'mike.johnson@example.com',
-      urlsCreated: 12,
-      totalClicks: 456,
-      joinDate: '2024-01-20',
-      status: 'suspended'
-    },
-    {
-      id: '4',
-      name: 'Sarah Wilson',
-      email: 'sarah.wilson@example.com',
-      urlsCreated: 67,
-      totalClicks: 4123,
-      joinDate: '2024-01-05',
-      status: 'active'
-    }
-  ]);
+
+export function AdminPage() {
+  const [users, setUsers] = useState<any[]>([]);
 
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [revenue, setRevenue] = useState<number>(0);
+  const [transactions, setTransactions] = useState<number>(0);
+
   const handleDeleteUser = (userId: string) => {
-    setUsers(users.filter(user => user.id !== userId));
+    deleteUser(userId);
+    getUsers();
+    setUsers(users.filter(user => user._id !== userId));
   };
 
+  const getUsers = async () => {
+    const fetchedUsers = await fetchUsersList();
+      // console.log(fetchedUsers);
+      if (fetchedUsers) {
+        setUsers(fetchedUsers);
+        // console.log(users);
+      }
+    };
+
+    const { handleLogout : onLogout } = useContext(AuthContext)
+    const {navigate : onNavigate} = useContext(NavContext)
+  const { fetchUsersList , deleteUser , toggleUserStatus , fetchRevenue } = useContext(AdminContext);
+
+  const loadRevenue = async () => {
+    const res = await fetchRevenue();
+    if (res.success) {
+      setRevenue(res.totalRevenue);
+      setTransactions(res.totalTransactions);
+    }
+  };
+
+
   const handleToggleUserStatus = (userId: string) => {
+    toggleUserStatus(userId);
     setUsers(users.map(user => 
-      user.id === userId 
+      user._id === userId 
         ? { ...user, status: user.status === 'active' ? 'suspended' : 'active' }
         : user
     ));
   };
 
+  useEffect(() => {    
+    getUsers();
+    loadRevenue()
+  //  console.log('Users in AdminPage useEffect:', userList);
+  
+  }, []);
+  
+  // useEffect(() => {
+  //   console.log('Users updated:', users);
+  // }, [users]);
+
+
   const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const totalUsers = users.length;
   const activeUsers = users.filter(user => user.status === 'active').length;
-  const totalUrls = users.reduce((sum, user) => sum + user.urlsCreated, 0);
+  const totalUrls = users.reduce((sum, user) => sum + user.linksCreated, 0);
   const totalClicks = users.reduce((sum, user) => sum + user.totalClicks, 0);
 
   return (
@@ -252,10 +268,10 @@ export function AdminPage({ onNavigate, onLogout }: AdminPageProps) {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">$12,450</div>
+              <div className="text-3xl font-bold">₹ {revenue/100}</div>
               <p className="text-xs text-muted-foreground flex items-center gap-1">
                 <TrendingUp className="w-3 h-3 text-green-500" />
-                +15% from last month
+                From { transactions } transactions
               </p>
             </CardContent>
           </Card>
@@ -301,16 +317,16 @@ export function AdminPage({ onNavigate, onLogout }: AdminPageProps) {
                 </TableHeader>
                 <TableBody>
                   {filteredUsers.map((user) => (
-                    <TableRow key={user.id} className="border-border">
+                    <TableRow key={user._id} className="border-border">
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           <Avatar className="h-8 w-8">
                             <AvatarFallback className="bg-muted">
-                              {user.name[0]}
+                              {user.fullName[0]}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <div className="font-medium">{user.name}</div>
+                            <div className="font-medium">{user.fullName}</div>
                             <div className="text-sm text-muted-foreground">
                               {user.email}
                             </div>
@@ -319,7 +335,7 @@ export function AdminPage({ onNavigate, onLogout }: AdminPageProps) {
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary" className="font-mono">
-                          {user.urlsCreated}
+                          {user.linksCreated}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -328,7 +344,7 @@ export function AdminPage({ onNavigate, onLogout }: AdminPageProps) {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {new Date(user.joinDate).toLocaleDateString()}
+                        {new Date(user.createdAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
                         <Badge 
@@ -350,7 +366,7 @@ export function AdminPage({ onNavigate, onLogout }: AdminPageProps) {
                               <Eye className="mr-2 h-4 w-4" />
                               View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleToggleUserStatus(user.id)}>
+                            <DropdownMenuItem onClick={() => handleToggleUserStatus(user._id)}>
                               {user.status === 'active' ? (
                                 <>
                                   <Shield className="mr-2 h-4 w-4" />
@@ -368,7 +384,7 @@ export function AdminPage({ onNavigate, onLogout }: AdminPageProps) {
                               <AlertDialogTrigger asChild>
                                 <DropdownMenuItem
                                   className="text-destructive focus:text-destructive"
-                                  onSelect={(e) => e.preventDefault()}
+                                  onSelect={(e : any) => e.preventDefault()}
                                 >
                                   <Trash2 className="mr-2 h-4 w-4" />
                                   Delete User
@@ -378,7 +394,7 @@ export function AdminPage({ onNavigate, onLogout }: AdminPageProps) {
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>Delete User Account</AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    Are you sure you want to delete {user.name}'s account? 
+                                    Are you sure you want to delete {user.fullName}'s account? 
                                     This action cannot be undone and will permanently delete 
                                     all their shortened URLs and analytics data.
                                   </AlertDialogDescription>
@@ -386,7 +402,7 @@ export function AdminPage({ onNavigate, onLogout }: AdminPageProps) {
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                                   <AlertDialogAction
-                                    onClick={() => handleDeleteUser(user.id)}
+                                    onClick={() => handleDeleteUser(user._id)}
                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                   >
                                     Delete Account

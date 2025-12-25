@@ -2,7 +2,7 @@ import { Children, createContext,useState,useContext,  PropsWithChildren, useEff
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { AuthContext } from "./AuthContext";
-import { get, set } from "mongoose";
+// import { get, set } from "mongoose";
 
 export const AnalyticsContext = createContext< undefined>(undefined);
 
@@ -96,7 +96,7 @@ export const AnalyticsProvider = ({children}: PropsWithChildren) => {
           
             //   console.log("Raw Analytics Data: ", data.analytics); 
             } catch (err) {
-              toast.error("Failed to load analytics");
+              console.error("Failed to load analytics");
             }
         };  
 
@@ -145,7 +145,7 @@ export const AnalyticsProvider = ({children}: PropsWithChildren) => {
                       (combined.monthlyClicks[month] || 0) + a.monthlyClicks[month];
                   }
                 }
-                console.log("Combined Analytics: ", combined);
+                // console.log("Combined Analytics: ", combined);
                 setAnalytics(combined);
                 transformForFrontend(combined);
             }
@@ -201,7 +201,7 @@ export const AnalyticsProvider = ({children}: PropsWithChildren) => {
             
                 setTopCountry(top);
                 setMonthlyClicks(getMonthlyStats(data.monthlyClicks));
-                console.log("Monthly Clicks: ", getMonthlyStats(data.monthlyClicks));
+                // console.log("Monthly Clicks: ", getMonthlyStats(data.monthlyClicks));
                 /* ---------- Monthly Clicks ---------- */
 
             }; 

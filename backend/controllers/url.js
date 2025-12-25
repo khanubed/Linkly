@@ -87,8 +87,13 @@ export const redirectShortUrl = async (req, res) => {
     const analytics = await UrlAnalytics.findOne({ urlId: url._id });
     if (!analytics) return res.status(404).json({ message: "Analytics missing" });
 
+    const user = await User.findOne({_id : url.userId})
+
     url.visits++;
     url.save();
+
+    user.totalClicks++;
+    user.save();
 
     // ---- BASIC COUNTS ----
     analytics.totalClicks++;

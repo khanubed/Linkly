@@ -12,23 +12,22 @@ import RedirectPage from './components/RedirectPage';
 
 export default function App() {
 
-  const { navigate, setCurrentPage , currentPage , authCheck , userData , token , setToken , setUserData , handleLogout} = useContext(AuthContext);
+  const {  currentPage , userData , setUserData } = useContext(AuthContext);
 
-  const handleUpgrade = (plan: 'pro' | 'business') => {
-    if (!userData) return;
+  // const handleUpgrade = (plan: 'pro' | 'business') => {
+  //   if (!userData) return;
 
-    setUserData({
-      ...userData,
-      subscriptionPlan: plan,
-      subscriptionExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
-    });
-  };
+  //     setUserData(prev =>
+  //   prev ? { ...prev, subscriptionPlan: plan } : prev
+  // );
+
+  // };
 
 
   const renderPage = () => {
     switch (currentPage) {
       case 'landing':
-        return <LandingPage onNavigate={navigate} />;
+        return <LandingPage  />;
       case 'signup':
         return (
           <AuthPage
@@ -44,18 +43,16 @@ export default function App() {
       case 'dashboard':
         return (
           <Dashboard
-            onUpgrade={handleUpgrade}
+            // onUpgrade={handleUpgrade}
           />
         );
       case 'admin':
         return (
           <AdminPage
-            onNavigate={navigate}
-            onLogout={handleLogout}
           />
         );
       default:
-        return <LandingPage onNavigate={navigate} />;
+        return <LandingPage  />;
     }
   };
 

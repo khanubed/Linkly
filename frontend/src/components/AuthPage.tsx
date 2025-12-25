@@ -6,6 +6,7 @@ import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { Eye, EyeOff, Link, ArrowLeft, Shield, Zap, CheckCircle, Globe } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
+import { NavContext } from '../context/NavigationContext';
 
 interface AuthPageProps {
   mode: 'login' | 'signup';
@@ -19,7 +20,8 @@ export function AuthPage({ mode  }: AuthPageProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { handleLogin , handleSignup , navigate : onNavigate   } = useContext(AuthContext)
+  const { handleLogin , handleSignup ,  } = useContext(AuthContext)
+  const { navigate : onNavigate } = useContext<any>(NavContext);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
