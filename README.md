@@ -1,6 +1,7 @@
-<img width="861" height="1899" alt="diagram-export-12-26-2025-3_01_14-PM" src="https://github.com/user-attachments/assets/c7c40981-52db-40b2-8838-6c57f7d041fe" /># 🔗 Lnk.ly – URL Shortener & Analytics SaaS
+# 🔗 Lnk.ly – URL Shortener & Analytics SaaS
 
 A full-stack URL Shortener SaaS platform with advanced analytics, user subscriptions, and admin management.
+https://linkly-phi.vercel.app/
 
 ---
 
