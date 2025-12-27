@@ -67,6 +67,7 @@ const handleShortenUrl = async () => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
+    toast.success("ShortCode copied !")
     // In a real app, you'd show a toast notification
   };
 

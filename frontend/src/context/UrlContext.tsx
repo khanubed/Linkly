@@ -135,7 +135,7 @@ const handleDeleteUrl = async (urlId: string) => {
             setUrls(data.urls);
           }
         } catch (error) {
-          toast.error("Failed to fetch URLs");
+          console.error("Failed to fetch URLs");
         }
     };
 
