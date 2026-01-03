@@ -80,12 +80,12 @@ export const createShortUrl = async (req, res) => {
 export const redirectShortUrl = async (req, res) => {
   try {
     const { shortCode } = req.params;
-
+    // console.log("Got redirection");
     const url = await Url.findOne({ shortUrl: shortCode });
-    if (!url) return res.status(404).json({ message: "URL not found" });
+    if (!url) return res.status(404).json({ok:false  ,  message: "URL not found" });
 
     const analytics = await UrlAnalytics.findOne({ urlId: url._id });
-    if (!analytics) return res.status(404).json({ message: "Analytics missing" });
+    if (!analytics) return res.status(404).json({ok:false , message: "Analytics missing" });
 
     const user = await User.findOne({_id : url.userId})
 
@@ -131,10 +131,10 @@ export const redirectShortUrl = async (req, res) => {
     );
 
     await analytics.save();
-
-    res.redirect(url.originalUrl);
+    // console.log(url.originalUrl);
+    return res.redirect(302, url.originalUrl);
   } catch (err) {
-    res.status(500).json({ message: "Redirect failed" });
+    res.status(500).json({ success: true , message: "Redirect failed" });
   }
 };
 
