@@ -47,6 +47,7 @@ const authCheck = async () => {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      withCredentials: true
     });
 
     if (data.success) {
