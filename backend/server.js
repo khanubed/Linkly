@@ -18,11 +18,15 @@ const app = express();
 const server = http.createServer(app);
 app.use(cors({
   origin: [
-    'http://localhost:3000',
-    'https://your-frontend.vercel.app'
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://linkly-phi.vercel.app"
   ],
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
 // app.use((req, res, next) => {
 //   res.setHeader(`Content-Security-Policy", "connect-src 'self' ${process.env.BACKEND_URL} ;`);
 //   next();
