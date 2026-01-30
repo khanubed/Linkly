@@ -27,12 +27,6 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization", "token"]
 }));
 
-// app.use((req, res, next) => {
-//   res.setHeader(`Content-Security-Policy", "connect-src 'self' ${process.env.BACKEND_URL} ;`);
-//   next();
-// });
-
-// app.options("*", cors());
 app.use(bodyParser.json())
 app.use("/api/status", (req, res)=>res.json({success : true , message : "The backend is running properly"}))
 app.use("/api/auth", userRouter)
